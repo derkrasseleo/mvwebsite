@@ -1,0 +1,168 @@
+<!-- wp:spacer {"height":"25px"} -->
+<div style="height:25px" aria-hidden="true" class="wp-block-spacer"></div>
+<!-- /wp:spacer -->
+
+<!-- wp:html -->
+<head>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+    <link href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" rel="stylesheet" />
+    <script src="https://unpkg.com/@mapbox/polyline"></script> <!-- Needed for polyline decoding -->
+
+<style>
+        #osm-map {
+            height: 500px;
+        }
+    </style>
+</head>
+
+<body>
+<p>Es sind noch <b id="p-distance">0</b> Kilometer bis nach Innsbruck.</p>
+<!--<p id="width">width</p>-->
+    <div id="osm-map"></div>
+
+    <script>
+const widthOutput = document.querySelector("#width");
+        var progress = 10;
+        var apiKey = ""; // Replace with your actual key
+
+        var map = L.map("osm-map");
+
+        // Add OSM tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Custom marker icon
+        var customIcon = L.icon({
+            iconUrl: 'https://www.musikverein-lieboch.at/wp-content/uploads/2025/02/bus_marker.png', // 'https://cdn-icons-png.flaticon.com/512/3448/3448605.png', // Replace with your own image
+            iconSize: [64, 64],
+            iconAnchor: [32, 64],
+            popupAnchor: [0, -32]
+        });
+// Custom marker icon
+        var startIcon = L.icon({
+            iconUrl: 'https://www.musikverein-lieboch.at/wp-content/uploads/2025/02/point_icon_black.png',
+            iconSize: [16, 16],
+            iconAnchor: [5, 3],
+            popupAnchor: [0, 0]
+        });
+// Custom marker icon
+        var endIcon = L.icon({
+            iconUrl: 'https://www.musikverein-lieboch.at/wp-content/uploads/2025/02/point_icon_black.png',
+            iconSize: [16, 16],
+            iconAnchor: [5, 2],
+            popupAnchor: [0, 0]
+        });
+
+        var startPoint = [46.973369, 15.336171]; // Start point
+        var endPoint = [47.29373, 11.47199];   // End point
+        var routeCoordinates = []; // To store decoded route
+        var movingMarker; // Marker for movement
+         // Change this value (0 - 100) to move the marker
+
+        // GraphHopper API URL
+        var graphhopperUrl = `https://graphhopper.com/api/1/route?point=${startPoint[0]},${startPoint[1]}&point=${endPoint[0]},${endPoint[1]}&vehicle=car&locale=de&points_encoded=true&key=${apiKey}`;
+
+        // Fetch route from GraphHopper
+        fetch(graphhopperUrl)
+            .then(response => response.json())
+            .then(data => {
+                console.log("GraphHopper Response:", data);
+
+var distance = data.paths[0].distance;
+var distance_full = 2*Math.floor(distance/1000);
+var level = 9-Math.floor(1440/window.innerWidth);
+document.getElementById("p-distance").textContent= (1-progress/100)*distance_full;
+//document.getElementById("width").textContent= window.innerWidth + " | " + level;
+
+                if (data.paths && data.paths[0].points) {
+                    // Decode polyline
+                    routeCoordinates = polyline.decode(data.paths[0].points);
+                    console.log("Decoded Polyline:", routeCoordinates);
+
+                    // Convert to Leaflet format
+                    routeCoordinates = routeCoordinates.map(point => [point[0], point[1]]);
+
+                    // Set map view
+                    map.setView([47.579,13.343], level);
+
+                    // Add start and end markers
+                    L.marker(startPoint, { icon: startIcon }).addTo(map).bindPopup("Lieboch");
+                    L.marker(endPoint, { icon: endIcon }).addTo(map).bindPopup("Innsbruck");
+
+                    // Draw polyline
+                    L.polyline(routeCoordinates, {
+                        color: 'blue',
+                        weight: 4,
+                        opacity: 0.5
+                    }).addTo(map);
+
+                    // Add moving marker at the start
+                    movingMarker = L.marker(startPoint, { icon: customIcon }).addTo(map);
+
+                    // Set marker position based on progress
+                    updateMarkerPosition(progress);
+                } else {
+                    console.error("Unexpected API response structure.");
+                }
+            })
+            .catch(error => console.error("Error fetching route data:", error));
+
+        function updateMarkerPosition(percentage) {
+            if (!routeCoordinates.length) return;
+
+            // Convert percentage to an index in the route array
+            let index = Math.floor((routeCoordinates.length - 1) * (percentage / 100));
+            let newPosition = routeCoordinates[index];
+
+            if (movingMarker) {
+                movingMarker.setLatLng(newPosition);
+            }
+        }
+    </script>
+</body>
+<!-- /wp:html -->
+
+<!-- wp:spacer {"height":"25px"} -->
+<div style="height:25px" aria-hidden="true" class="wp-block-spacer"></div>
+<!-- /wp:spacer -->
+
+<!-- wp:paragraph -->
+<p><strong>Rund 1.000 Kilometer hin und zurück!</strong><br>Einen Verein mit über 70 Musikerinnen und Musikern für ein Wochenende nach Innsbruck zu bringen, ist eine echte Herkulesaufgabe. Neben den Kosten für Bus, Verpflegung und Unterkunft müssen auch die Ausgaben für die umfangreiche Vorbereitungszeit gedeckt werden.<br>Möchten Sie uns bei diesem Projekt finanziell unterstützen? Dann sichern Sie sich symbolisch ein paar Kilometer auf unserem Weg von Lieboch nach Innsbruck. Jeder Kilometer zählt – und wir sind für jede Unterstützung dankbar!</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><strong>Sie wollen einmalig Spenden?</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Wir freuen uns über jede Einzelspenden an folgende Bankverbindung:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><!-- wp:paragraph -->
+<p>Raiffeisenbank Lieboch-Stainz<br>IBAN: AT42 3821 0000 0000 9696<br>BIC: RZSTAT2G210</p>
+<!-- /wp:paragraph --></blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:paragraph -->
+<p>Einfach mit Ihrer Banking-App einscannen 👇</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"id":2222,"sizeSlug":"medium","linkDestination":"none"} -->
+<figure class="wp-block-image size-medium"><img src="https://www.musikverein-lieboch.at/wp-content/uploads/2025/02/EPC_QR_CODE-1-300x300.png" alt="" class="wp-image-2222"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Oder jetzt unterstützendes Mitglied werden:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons {"layout":{"type":"flex","flexWrap":"nowrap"}} -->
+<div class="wp-block-buttons"><!-- wp:button {"textColor":"white","width":100,"style":{"elements":{"link":{"color":{"text":"var:preset|color|white"}}}},"fontSize":"medium"} -->
+<div class="wp-block-button has-custom-width wp-block-button__width-100 has-custom-font-size has-medium-font-size"><a class="wp-block-button__link has-white-color has-text-color has-link-color wp-element-button" href="https://www.musikverein-lieboch.at/mitgliedsformular/">Mitglied werden</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->
